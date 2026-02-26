@@ -1,0 +1,53 @@
+name: "Docker Image Promotion"
+description: "Copies a Docker image (manifest + blobs) between Artifactory repos using jf rt cp"
+author: "yevdoa"
+runs:
+  using: "composite"
+  steps:
+    - name: Ensure jq is installed
+      shell: bash
+      run: |
+        if ! command -v jq >/dev/null 2>&1; then
+          echo "jq not found; attempting to install..."
+          if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update -y && sudo apt-get install -y jq
+          elif command -v brew >/dev/null 2>&1; then
+            brew install jq
+          else
+            echo "jq is required. Please ensure jq is installed on the runner." >&2
+            exit 1
+          fi
+        fi
+
+    - name: Copy Docker image with jf rt cp
+      id: docker-cp
+      shell: bash
+      run: |
+        set -euo pipefail
+        chmod +x .github/actions/docker-image-promotion/promotion.sh
+        ./.github/actions/docker-image-promotion/promotion.sh "${{ inputs.src-repo }}" "${{ inputs.dst-repo }}" "${{ inputs.image }}" "${{ inputs.tag }}"
+
+        echo "image=${{ inputs.image }}" >> $GITHUB_OUTPUT
+        echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+
+inputs:
+  src-repo:
+    description: "Source Docker repo in Artifactory"
+    required: true
+  dst-repo:
+    description: "Destination Docker repo in Artifactory"
+    required: true
+  image:
+    description: "Docker image name (e.g., org/app)"
+    required: true
+  tag:
+    description: "Docker image tag"
+    required: true
+outputs:
+  image:
+    description: "Docker image name"
+    value: ${{ steps.docker-cp.outputs.image }}
+  tag:
+    description: "Docker image tag"
+    value: ${{ steps.docker-cp.outputs.tag }}
+

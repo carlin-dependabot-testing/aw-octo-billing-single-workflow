@@ -1,0 +1,74 @@
+name: Promote Release to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-repo:
+        description: 'Target Docker repository'
+        default: 'prod-docker-local'
+        required: true
+        type: string      
+      image-name:
+        description: 'Image name to promote'
+        default: 'octo-billing'
+        required: true
+        type: string
+      image-version:
+        description: 'Image version to promote'
+        required: true
+        type: string
+
+env:
+  OIDC_PROVIDER_NAME: swampup-2025/octo-billing@github
+  JF_URL: ${{ vars.JF_URL }}
+  JF_REGISTRY: ${{ vars.JF_REGISTRY }}
+  JF_DOCKER_REPO: dev-docker-local
+
+jobs:
+  promote-to-production:
+    runs-on: self-hosted
+    permissions:
+        contents: read
+        packages: write
+        attestations: write  # Required for attestation
+        id-token: write      # Added for OIDC token access
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+  
+      - name: Install JFrog CLI
+        id: setup-jfrog-cli
+        uses: jfrog/setup-jfrog-cli@v4.6.0
+        env:
+          JF_URL: ${{ env.JF_URL }}
+        with:
+          version: 2.78.9
+          oidc-provider-name: ${{ env.OIDC_PROVIDER_NAME }}
+
+      - name: Verify Provenance and Test Results
+        run: |
+          echo "# Evidence Verification & Promotion to Prod" >> $GITHUB_STEP_SUMMARY
+          jf evd verify --package-repo-name ${{ env.JF_DOCKER_REPO }} \
+            --package-name ${{ github.event.inputs.image-name }} \
+            --package-version ${{ github.event.inputs.image-version }} \
+            --format markdown >> $GITHUB_STEP_SUMMARY            
+
+      - name: Promote Docker Image to Production Repository
+        uses: ./.github/actions/docker-image-promotion
+        with:
+          src-repo: ${{ env.JF_DOCKER_REPO }}
+          dst-repo: ${{ github.event.inputs.target-repo }}
+          image: ${{ github.event.inputs.image-name }}
+          tag: ${{ github.event.inputs.image-version }}
+
+      - name: Write Promotion Summary
+        run: |
+          echo "## Promotion Result" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact (or package) | Source Repository | Target Repository |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- | --- |" >> $GITHUB_STEP_SUMMARY
+          LINK="${{ env.JF_URL }}/ui/repos/tree/General/${{ github.event.inputs.target-repo }}/${{ github.event.inputs.image-name }}/${{ github.event.inputs.image-version }}"
+          echo "| ${{ github.event.inputs.image-name }}:${{ github.event.inputs.image-version }} | ${{ env.JF_DOCKER_REPO }} | [${{ github.event.inputs.target-repo }}](${LINK}) |" >> $GITHUB_STEP_SUMMARY
+          
+        

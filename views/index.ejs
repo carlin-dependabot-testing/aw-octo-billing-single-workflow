@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+        }
+        .stats-card {
+            transition: transform 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">🐙 Octo Billing</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/health">API Health</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/users">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/bills">Bills</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 mb-4"><%= title %></h1>
+            <p class="lead">A demo billing application with intentionally vulnerable dependencies</p>
+            <p class="text-light">Current time: <%= currentTime %></p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card h-100 border-0 shadow">
+                    <div class="card-body text-center">
+                        <div class="display-4 text-primary mb-3">👥</div>
+                        <h3><%= userCount %></h3>
+                        <p class="text-muted">Total Users</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card h-100 border-0 shadow">
+                    <div class="card-body text-center">
+                        <div class="display-4 text-success mb-3">📄</div>
+                        <h3><%= billCount %></h3>
+                        <p class="text-muted">Total Bills</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card h-100 border-0 shadow">
+                    <div class="card-body text-center">
+                        <div class="display-4 text-warning mb-3">⚠️</div>
+                        <h3>Multiple</h3>
+                        <p class="text-muted">Vulnerabilities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">⚠️ Security Notice</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">
+                            This is a <strong>DEMO APPLICATION</strong> with intentionally vulnerable dependencies. 
+                            It should <strong>NEVER</strong> be used in production environments. 
+                            The vulnerabilities are included for security testing and demonstration purposes only.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">🔗 API Endpoints</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><code>GET /api/health</code> - Health check</li>
+                                    <li><code>GET /api/users</code> - List users</li>
+                                    <li><code>POST /api/users</code> - Create user</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><code>GET /api/bills</code> - List bills</li>
+                                    <li><code>POST /api/bills</code> - Create bill</li>
+                                    <li><code>POST /api/payments</code> - Process payment</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2023 Octo Billing Demo. This is a vulnerable application for testing purposes only.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

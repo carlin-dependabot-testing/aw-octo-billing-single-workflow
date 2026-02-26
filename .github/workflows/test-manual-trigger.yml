@@ -1,0 +1,28 @@
+name: Test Manual Trigger
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 16
+    
+    - name: Install dependencies
+      run: npm ci || npm i
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Success message
+      run: |
+        echo "✅ Manual workflow trigger is working!" >> $GITHUB_STEP_SUMMARY
+        echo "The workflow_dispatch trigger is functioning correctly." >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,96 @@
+name: Build, Test & Attest
+
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  OIDC_PROVIDER_NAME: swampup-2025/octo-billing@github
+  JF_URL: ${{ vars.JF_URL }}
+  JF_REGISTRY: ${{ vars.JF_REGISTRY }}
+  IMAGE_NAME: octo-billing
+  BUILD_NAME: octo-billing-build
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
+        attestations: write  # Required for attestation
+        id-token: write      # Added for OIDC token access
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Install JFrog CLI
+      id: setup-jfrog-cli
+      uses: jfrog/setup-jfrog-cli@v4.6.0
+      env:
+        JF_URL: ${{ env.JF_URL }}
+      with:
+        version: 2.78.9
+        oidc-provider-name: ${{ env.OIDC_PROVIDER_NAME }}
+      
+    - name: Docker login
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.JF_REGISTRY }}
+        username: ${{ steps.setup-jfrog-cli.outputs.oidc-user }}
+        password: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push Docker image
+      id: build-and-push
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        tags: ${{ env.JF_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
+        build-args: ${{ env.BUILD_ARGS }}
+
+    - name: Attest docker image
+      uses: actions/attest-build-provenance@v2
+      with:
+        subject-name: oci://${{ env.JF_REGISTRY }}/${{ env.IMAGE_NAME }}
+        subject-digest: ${{ steps.build-and-push.outputs.digest }}
+
+    - name: Setup Node.js 16
+      uses: actions/setup-node@v4
+      with:
+        node-version: 16
+
+    - name: Install dependencies
+      run: npm ci || npm i
+
+    - name: Run integration tests (JSON)
+      env:
+        IMAGE_NAME: ${{ env.JF_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
+      run: npm run test:it:json
+   
+    - name: Attest integration tests report
+      uses: actions/attest@v2
+      with:
+        subject-name: oci://${{ env.JF_REGISTRY }}/${{ env.IMAGE_NAME }}
+        subject-digest: ${{ steps.build-and-push.outputs.digest }}
+        predicate-type: 'https://jfrog.com/security/attestation/test-report/v1'
+        predicate-path: 'coverage/integration/itest-report.json'
+
+    - name: Build Summary
+      run: |
+        pkgName="${{ env.IMAGE_NAME }}/${{ github.run_number }}"
+        pkgLink="${{ env.JF_URL }}/ui/packages/docker:%2F%2F${pkgName}"
+        fullImgTag="${{ env.JF_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}"
+        echo "## 🐳 Docker Package Created" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: ${pkgName}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Full Tag**: ${fullImgTag}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Registry**: ${{ env.JF_REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **View**: [Open in JFrog]($pkgLink)" >> $GITHUB_STEP_SUMMARY
