@@ -11,7 +11,7 @@
     "test:it:json": "bash -lc 'mkdir -p coverage/integration && jest --runInBand --testMatch \"<rootDir>/itest/**/*.test.js\" --json --outputFile=coverage/integration/itest-report.json'"
   },
   "dependencies": {
-    "axios": "0.18.0",
+    "axios": "0.30.3",
     "body-parser": "1.18.2",
     "cookie-parser": "1.4.3",
     "cors": "2.8.4",
