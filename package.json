@@ -28,7 +28,7 @@
     "supertest": "^6.3.3",
     "tar": "4.4.6",
     "underscore": "1.8.3",
-    "ws": "6.1.0"
+    "ws": "6.2.4"
   },
   "devDependencies": {
     "jest": "^30.1.3",
